@@ -2,6 +2,7 @@
 
 namespace InterNACHI\Modular\Tests;
 
+use Composer\Json\JsonFile;
 use Illuminate\Encryption\Encrypter;
 use InterNACHI\Modular\Console\Commands\Make\MakeModule;
 use InterNACHI\Modular\Support\DatabaseFactoryHelper;
@@ -13,9 +14,18 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+	public string $app_composer_file;
+
+	public array $original_app_composer_contents;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
+
+		$this->app_composer_file = $this->getApplicationBasePath().'/composer.json';
+
+		$json_file = new JsonFile($this->app_composer_file);
+		$this->original_app_composer_contents = $json_file->read();
 
 		Modules::reload();
 
@@ -31,6 +41,9 @@ abstract class TestCase extends Orchestra
 	protected function tearDown(): void
 	{
 		$this->app->make(DatabaseFactoryHelper::class)->resetResolvers();
+
+		$json_file = new JsonFile($this->app_composer_file);
+		$json_file->write($this->original_app_composer_contents);
 
 		parent::tearDown();
 	}

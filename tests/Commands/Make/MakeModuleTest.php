@@ -2,6 +2,7 @@
 
 namespace InterNACHI\Modular\Tests\Commands\Make;
 
+use Composer\Json\JsonFile;
 use InterNACHI\Modular\Console\Commands\Make\MakeModule;
 use InterNACHI\Modular\Support\Facades\Modules;
 use InterNACHI\Modular\Tests\Concerns\WritesToAppFilesystem;
@@ -37,7 +38,7 @@ class MakeModuleTest extends TestCase
 
 		$this->assertEquals("modules/{$module_name}", $composer_contents['name']);
 		$this->assertEquals('src/', $composer_contents['autoload']['psr-4']['Modules\\TestModule\\']);
-		$this->assertEquals('tests/', $composer_contents['autoload']['psr-4']['Modules\\TestModule\\Tests\\']);
+		$this->assertEquals('tests/', $composer_contents['autoload-dev']['psr-4']['Modules\\TestModule\\Tests\\']);
 		$this->assertContains('Modules\\TestModule\\Providers\\TestModuleServiceProvider', $composer_contents['extra']['laravel']['providers']);
 
 		if (version_compare($this->app->version(), '8.0.0', '>=')) {
@@ -48,17 +49,10 @@ class MakeModuleTest extends TestCase
 			$this->assertContains('database/seeds', $composer_contents['autoload']['classmap']);
 		}
 
-		$app_composer_file = $this->getApplicationBasePath().'/composer.json';
-		$app_composer_contents = json_decode($fs->get($app_composer_file), true);
+		$json_file = new JsonFile($this->app_composer_file);
+		$new_app_composer_content = $json_file->read();
 
-		$this->assertEquals('*', $app_composer_contents['require']["modules/{$module_name}"]);
-
-		$repository = [
-			'type' => 'path',
-			'url' => 'app-modules/*',
-			'options' => ['symlink' => true],
-		];
-		$this->assertContains($repository, $app_composer_contents['repositories']);
+		$this->assertContains('app-modules/*/composer.json', $new_app_composer_content['extra']['merge-plugin']['include']);
 	}
 
 	public function test_it_scaffolds_a_new_module_based_on_custom_config(): void

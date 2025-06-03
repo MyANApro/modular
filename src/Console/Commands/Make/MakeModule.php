@@ -6,7 +6,8 @@ use Composer\Factory;
 use Composer\Json\JsonFile;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use InterNACHI\Modular\Console\Commands\ModulesClear;
 use InterNACHI\Modular\Support\ModuleRegistry;
@@ -23,56 +24,38 @@ class MakeModule extends Command
 
 	/**
 	 * This is the base path of the module
-	 *
-	 * @var string
 	 */
-	protected $base_path;
+	protected string $base_path;
 
 	/**
 	 * This is the PHP namespace for all modules
-	 *
-	 * @var string
 	 */
-	protected $module_namespace;
+	protected string $module_namespace;
 
 	/**
 	 * This is the composer namespace for all modules
-	 *
-	 * @var string
 	 */
-	protected $composer_namespace;
+	protected string $composer_namespace;
 
 	/**
 	 * This is the name of the module
-	 *
-	 * @var string
 	 */
-	protected $module_name;
+	protected string $module_name;
 
 	/**
 	 * This is the module name as a StudlyCase'd name
-	 *
-	 * @var string
 	 */
-	protected $class_name_prefix;
+	protected string $class_name_prefix;
 
 	/**
 	 * This is the name of the module as a composer package
 	 * i.e. modules/my-module
-	 *
-	 * @var string
 	 */
-	protected $composer_name;
+	protected string $composer_name;
 
-	/**
-	 * @var \Illuminate\Filesystem\Filesystem
-	 */
-	protected $filesystem;
+	protected Filesystem $filesystem;
 
-	/**
-	 * @var \InterNACHI\Modular\Support\ModuleRegistry
-	 */
-	protected $module_registry;
+	protected ModuleRegistry $module_registry;
 
 	public function __construct(Filesystem $filesystem, ModuleRegistry $module_registry)
 	{
@@ -82,7 +65,12 @@ class MakeModule extends Command
 		$this->module_registry = $module_registry;
 	}
 
-	public function handle()
+	/**
+	 * @throws \Seld\JsonLint\ParsingException
+	 * @throws \UnexpectedValueException
+	 * @throws \Exception
+	 */
+	public function handle(): int
 	{
 		$this->module_name = Str::kebab($this->argument('name'));
 		$this->class_name_prefix = Str::studly($this->argument('name'));
@@ -107,15 +95,13 @@ class MakeModule extends Command
 		$this->call(ModulesClear::class);
 
 		$this->newLine();
-		$this->line("Please run <kbd>composer update {$this->composer_name}</kbd>");
-		$this->newLine();
 
 		$this->module_registry->reload();
 
 		return 0;
 	}
 
-	public function newLine($count = 1)
+	public function newLine($count = 1): void
 	{
 		$this->getOutput()->newLine($count);
 	}
@@ -149,7 +135,7 @@ class MakeModule extends Command
 		return $this->confirm('Would you like to cancel and configure your module namespace first?', true);
 	}
 
-	protected function ensureModulesDirectoryExists()
+	protected function ensureModulesDirectoryExists(): void
 	{
 		if (! $this->filesystem->isDirectory($this->base_path)) {
 			$this->filesystem->makeDirectory($this->base_path, 0777, true);
@@ -157,7 +143,7 @@ class MakeModule extends Command
 		}
 	}
 
-	protected function writeStubs()
+	protected function writeStubs(): void
 	{
 		$this->title('Creating initial module files');
 
@@ -208,7 +194,12 @@ class MakeModule extends Command
 			: 'seeds';
 	}
 
-	protected function updateCoreComposerConfig()
+	/**
+	 * @throws \Seld\JsonLint\ParsingException
+	 * @throws \UnexpectedValueException
+	 * @throws \Exception
+	 */
+	protected function updateCoreComposerConfig(): void
 	{
 		$this->title('Updating application composer.json file');
 
@@ -221,92 +212,34 @@ class MakeModule extends Command
 		$json_file = new JsonFile(Factory::getComposerFile());
 		$definition = $json_file->read();
 
-		if (! isset($definition['repositories'])) {
-			$definition['repositories'] = [];
+		if (! isset($definition['extra']['merge-plugin']['include'])) {
+			$definition['extra']['merge-plugin']['include'] = [];
 		}
 
-		if (! isset($definition['require'])) {
-			$definition['require'] = [];
-		}
+		$includePath = Str::of(Config::get('app-modules.modules_directory'))
+			->finish('/')->append('*/composer.json')->toString();
 
-		$module_config = [
-			'type' => 'path',
-			'url' => str_replace('\\', '/', config('app-modules.modules_directory', 'app-modules')).'/*',
-			'options' => [
-				'symlink' => true,
-			],
-		];
+		$merge_plugin_already_setup = collect($definition['extra']['merge-plugin']['include'])
+			->contains(fn($includes) => $includes === $includePath);
 
-		$has_changes = false;
-
-		$repository_already_exists = collect($definition['repositories'])
-			->contains(function($repository) use ($module_config) {
-				return $repository['url'] === $module_config['url'];
-			});
-
-		if (false === $repository_already_exists) {
-			$this->line(" - Adding path repository for <info>{$module_config['url']}</info>");
-			$has_changes = true;
-
-			if (Arr::isAssoc($definition['repositories'])) {
-				$definition['repositories'][$this->module_name] = $module_config;
-			} else {
-				$definition['repositories'][] = $module_config;
-			}
-		}
-
-		if (! isset($definition['require'][$this->composer_name])) {
-			$this->line(" - Adding require statement for <info>{$this->composer_name}:*</info>");
-			$has_changes = true;
-
-			$definition['require']["{$this->composer_namespace}/{$this->module_name}"] = '*';
-			$definition['require'] = $this->sortComposerPackages($definition['require']);
-		}
-
-		if ($has_changes) {
+		if ($merge_plugin_already_setup === false) {
+			$definition['extra']['merge-plugin']['include'][] = $includePath;
 			$json_file->write($definition);
 			$this->line(" - Wrote to <info>{$json_file->getPath()}</info>");
 		} else {
-			$this->line(' - Nothing to update (repository & require entry already exist)');
+			$this->line(' - Nothing to update (merge-plugin entry already exist)');
 		}
+
+		Process::path(base_path())
+			->command('composer dump-autoload')
+			->run();
 
 		chdir($original_working_dir);
 
 		$this->newLine();
 	}
 
-	protected function sortComposerPackages(array $packages): array
-	{
-		$prefix = function($requirement) {
-			return preg_replace(
-				[
-					'/^php$/',
-					'/^hhvm-/',
-					'/^ext-/',
-					'/^lib-/',
-					'/^\D/',
-					'/^(?!php$|hhvm-|ext-|lib-)/',
-				],
-				[
-					'0-$0',
-					'1-$0',
-					'2-$0',
-					'3-$0',
-					'4-$0',
-					'5-$0',
-				],
-				$requirement
-			);
-		};
-
-		uksort($packages, function($a, $b) use ($prefix) {
-			return strnatcmp($prefix($a), $prefix($b));
-		});
-
-		return $packages;
-	}
-
-	protected function setUpStyles()
+	protected function setUpStyles(): void
 	{
 		$formatter = $this->getOutput()->getFormatter();
 
@@ -315,7 +248,7 @@ class MakeModule extends Command
 		}
 	}
 
-	protected function title($title)
+	protected function title($title): void
 	{
 		$this->getOutput()->title($title);
 	}
@@ -326,12 +259,8 @@ class MakeModule extends Command
 			return $custom_stubs;
 		}
 
-		$composer_stub = version_compare($this->getLaravel()->version(), '8.0.0', '<')
-			? 'composer-stub-v7.json'
-			: 'composer-stub-latest.json';
-
 		return [
-			'composer.json' => $this->pathToStub($composer_stub),
+			'composer.json' => $this->pathToStub('composer-stub-latest.json'),
 			'src/Providers/StubClassNamePrefixServiceProvider.php' => $this->pathToStub('ServiceProvider.php'),
 			'tests/Feature/Providers/StubClassNamePrefixExampleTest.php' => $this->pathToStub('ModuleExampleTest.php'),
 			'database/migrations/StubMigrationPrefix_set_up_StubModuleName_module.php' => $this->pathToStub('migration.php'),
