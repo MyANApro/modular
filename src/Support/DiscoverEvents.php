@@ -12,7 +12,7 @@ class DiscoverEvents extends \Illuminate\Foundation\Events\DiscoverEvents
 		if ($module = Modules::moduleForPath($file->getRealPath())) {
 			return $module->pathToFullyQualifiedClassName($file->getPathname());
 		}
-		
+
 		return parent::classFromFile($file, $basePath);
 	}
 }

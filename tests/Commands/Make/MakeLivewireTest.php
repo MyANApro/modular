@@ -23,20 +23,20 @@ class MakeLivewireTest extends TestCase
 		if (! class_exists(Livewire::class)) {
 			$this->markTestSkipped('Livewire is not installed.');
 		}
-		
+
 		if (class_exists(Mechanism::class)) {
 			$this->markTestSkipped('Livewire 3 is not yet supported.');
 		}
 	}
-	
+
 	public function test_it_overrides_the_default_commands(): void
 	{
 		$this->requiresLaravelVersion('9.2.0');
-		
+
 		$this->artisan('make:livewire', ['--help' => true])
 			->expectsOutputToContain('--module')
 			->assertExitCode(0);
-		
+
 		$this->artisan('livewire:make', ['--help' => true])
 			->expectsOutputToContain('--module')
 			->assertExitCode(0);

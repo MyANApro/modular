@@ -50,7 +50,7 @@ return (new PhpCsFixer\Config())
 		'no_leading_namespace_whitespace' => true,
 		'no_blank_lines_after_class_opening' => true,
 		'no_blank_lines_after_phpdoc' => true,
-		'no_whitespace_in_blank_line' => false,
+		'no_whitespace_in_blank_line' => true,
 		'no_whitespace_before_comma_in_array' => true,
 		'no_useless_else' => true,
 		'no_useless_return' => true,

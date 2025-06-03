@@ -7,18 +7,18 @@ use Illuminate\Filesystem\Filesystem;
 trait PreloadsAppModules
 {
 	protected static $autoloader_registered = false;
-	
+
 	/** @before */
 	public function prepareTestModule(): void
 	{
 		$src = __DIR__.'/../testbench-core/app-modules';
 		$dest = static::applicationBasePath().'/app-modules';
-		
+
 		$fs = new Filesystem();
 		$fs->deleteDirectory($dest);
 		$fs->copyDirectory($src, $dest);
 	}
-	
+
 	/** @before */
 	public function prepareModuleAutoloader(): void
 	{
@@ -37,7 +37,7 @@ trait PreloadsAppModules
 				}
 			});
 		}
-		
+
 		static::$autoloader_registered = true;
 	}
 }

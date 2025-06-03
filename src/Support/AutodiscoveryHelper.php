@@ -25,14 +25,14 @@ use Throwable;
 class AutodiscoveryHelper
 {
 	protected ?array $data = null;
-	
+
 	public function __construct(
 		protected FinderFactory $finders,
 		protected Filesystem $fs,
 		protected string $cache_path,
 	) {
 	}
-	
+
 	public function writeCache(Container $app): void
 	{
 		$helpers = [
@@ -46,23 +46,23 @@ class AutodiscoveryHelper
 			$this->policies(...),
 			$this->livewire(...),
 		];
-		
+
 		foreach ($helpers as $helper) {
 			try {
 				$app->call($helper);
 			} catch (BindingResolutionException) {
 			}
 		}
-		
+
 		$cache = Collection::make($this->data)->toArray();
 		$php = '<?php return '.var_export($cache, true).';'.PHP_EOL;
-		
+
 		$this->fs->ensureDirectoryExists($this->fs->dirname($this->cache_path));
-		
+
 		if (! $this->fs->put($this->cache_path, $php)) {
 			throw new RuntimeException('Unable to write cache file.');
 		}
-		
+
 		try {
 			require $this->cache_path;
 		} catch (Throwable $e) {
@@ -70,21 +70,21 @@ class AutodiscoveryHelper
 			throw new RuntimeException('Attempted to write invalid cache file.', $e->getCode(), $e);
 		}
 	}
-	
+
 	public function clearCache(): void
 	{
 		if ($this->fs->exists($this->cache_path)) {
 			$this->fs->delete($this->cache_path);
 		}
 	}
-	
+
 	/** @return Collection<string, \InterNACHI\Modular\Support\ModuleConfig> */
 	public function modules(bool $reload = false): Collection
 	{
 		if ($reload) {
 			unset($this->data['modules']);
 		}
-		
+
 		$data = $this->withCache(
 			key: 'modules',
 			default: fn() => $this->finders
@@ -94,7 +94,7 @@ class AutodiscoveryHelper
 					$composer_config = json_decode($file->getContents(), true, 16, JSON_THROW_ON_ERROR);
 					$base_path = rtrim(str_replace('\\', '/', $file->getPath()), '/');
 					$name = basename($base_path);
-					
+
 					return [
 						$name => [
 							'name' => $name,
@@ -106,11 +106,11 @@ class AutodiscoveryHelper
 					];
 				}),
 		);
-		
+
 		return Collection::make($data)
 			->map(fn(array $d) => new ModuleConfig($d['name'], $d['base_path'], new Collection($d['namespaces'])));
 	}
-	
+
 	public function routes(): void
 	{
 		$this->withCache(
@@ -122,7 +122,7 @@ class AutodiscoveryHelper
 			each: fn(string $filename) => require $filename
 		);
 	}
-	
+
 	public function views(ViewFactory $factory): void
 	{
 		$this->withCache(
@@ -138,7 +138,7 @@ class AutodiscoveryHelper
 			each: fn(array $row) => $factory->addNamespace($row['namespace'], $row['path']),
 		);
 	}
-	
+
 	public function blade(BladeCompiler $blade): void
 	{
 		// Handle individual Blade components (old syntax: `<x-module-* />`)
@@ -154,7 +154,7 @@ class AutodiscoveryHelper
 				]),
 			each: fn(array $row) => $blade->component($row['fqcn'], null, $row['prefix']),
 		);
-		
+
 		// Handle Blade component namespaces (new syntax: `<x-module::* />`)
 		$this->withCache(
 			key: 'blade_component_dirs',
@@ -169,7 +169,7 @@ class AutodiscoveryHelper
 			each: fn(array $row) => $blade->componentNamespace($row['namespace'], $row['prefix']),
 		);
 	}
-	
+
 	public function translations(Translator $translator): void
 	{
 		$this->withCache(
@@ -188,7 +188,7 @@ class AutodiscoveryHelper
 			},
 		);
 	}
-	
+
 	public function migrations(Migrator $migrator): void
 	{
 		$this->withCache(
@@ -200,7 +200,7 @@ class AutodiscoveryHelper
 			each: fn(string $path) => $migrator->path($path),
 		);
 	}
-	
+
 	public function commands(Artisan $artisan): void
 	{
 		$this->withCache(
@@ -214,7 +214,7 @@ class AutodiscoveryHelper
 			each: fn(string $fqcn) => $artisan->resolve($fqcn),
 		);
 	}
-	
+
 	public function policies(Gate $gate): void
 	{
 		$this->withCache(
@@ -226,12 +226,12 @@ class AutodiscoveryHelper
 				->map(function(ModuleFileInfo $file) use ($gate) {
 					$fqcn = $file->fullyQualifiedClassName();
 					$namespace = rtrim($file->module()->namespaces->first(), '\\');
-					
+
 					$candidates = [
 						$namespace.'\\Policies\\'.Str::after($fqcn, 'Models\\').'Policy', // Policies/Foo/BarPolicy
 						$namespace.'\\Policies\\'.Str::afterLast($fqcn, '\\').'Policy',   // Policies/BarPolicy
 					];
-					
+
 					foreach ($candidates as $candidate) {
 						if (class_exists($candidate)) {
 							return [
@@ -240,14 +240,14 @@ class AutodiscoveryHelper
 							];
 						}
 					}
-					
+
 					return null;
 				})
 				->filter(),
 			each: fn(array $row) => $gate->policy($row['fqcn'], $row['policy']),
 		);
 	}
-	
+
 	public function events(Dispatcher $events, bool $autodiscover = true): void
 	{
 		$this->withCache(
@@ -270,7 +270,7 @@ class AutodiscoveryHelper
 			},
 		);
 	}
-	
+
 	public function livewire(LivewireManager $livewire): void
 	{
 		$this->withCache(
@@ -295,7 +295,7 @@ class AutodiscoveryHelper
 			each: fn(array $row) => $livewire->component($row['name'], $row['fqcn']),
 		);
 	}
-	
+
 	protected function withCache(
 		string $key,
 		Closure $default,
@@ -303,12 +303,12 @@ class AutodiscoveryHelper
 	): iterable {
 		$this->data ??= $this->readData();
 		$this->data[$key] ??= value($default);
-		
+
 		return $each
 			? Collection::make($this->data[$key])->each($each)
 			: $this->data[$key];
 	}
-	
+
 	protected function readData(): array
 	{
 		try {
@@ -319,7 +319,7 @@ class AutodiscoveryHelper
 			return [];
 		}
 	}
-	
+
 	protected function isInstantiableCommand($command): bool
 	{
 		return is_subclass_of($command, Command::class)

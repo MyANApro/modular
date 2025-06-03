@@ -13,21 +13,21 @@ trait Modularize
 	{
 		if ($name = $this->option('module')) {
 			$registry = $this->getLaravel()->make(ModuleRegistry::class);
-			
+
 			if ($module = $registry->module($name)) {
 				return $module;
 			}
-			
+
 			throw new InvalidOptionException(sprintf('The "%s" module does not exist.', $name));
 		}
-		
+
 		return null;
 	}
-	
+
 	protected function configure()
 	{
 		parent::configure();
-		
+
 		$this->getDefinition()->addOption(
 			new InputOption(
 				'--module',
