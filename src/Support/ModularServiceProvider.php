@@ -62,7 +62,7 @@ class ModularServiceProvider extends ServiceProvider
 			return new AutodiscoveryHelper(
 				$app->make(FinderFactory::class),
 				$app->make(Filesystem::class),
-				$this->app->bootstrapPath('cache/app-modules.php')
+				$this->app->bootstrapPath('cache/'.config('app-modules.cache_filename'))
 			);
 		});
 

@@ -33,7 +33,7 @@ namespace InterNACHI\Modular\Tests\EventDiscovery {
 
 			$this->artisan(ModulesCache::class);
 
-			$cache = require $this->app->bootstrapPath('cache/app-modules.php');
+			$cache = require $this->app->bootstrapPath('cache/modular.php');
 
 			$this->assertArrayHasKey($module->qualify('Events\\TestEvent'), $cache['events']);
 
