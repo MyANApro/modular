@@ -156,6 +156,7 @@ class MakeModule extends Command
 			'StubModuleNameSingular' => Str::singular($this->module_name),
 			'StubModuleNamePlural' => Str::plural($this->module_name),
 			'StubModuleName' => $this->module_name,
+			'StubPascalCaseModuleName' => Str::pascal($this->module_name),
 			'StubClassNamePrefix' => $this->class_name_prefix,
 			'StubComposerName' => $this->composer_name,
 			'StubMigrationPrefix' => date('Y_m_d_His'),
