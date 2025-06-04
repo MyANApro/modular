@@ -3,8 +3,6 @@ name: PHPUnit
 on:
   push:
   pull_request:
-  schedule:
-    - cron: '0 14 * * 3' # Run Wednesdays at 2pm EST
 
 jobs:
   php-tests:
@@ -35,7 +33,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, bcmath, intl, iconv, fileinfo
           tools: composer:v2
-      
+
       - name: Register composer cache directory
         id: composer-cache-files-dir
         run: |
