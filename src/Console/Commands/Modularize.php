@@ -2,6 +2,7 @@
 
 namespace InterNACHI\Modular\Console\Commands;
 
+use Illuminate\Support\Str;
 use InterNACHI\Modular\Support\ModuleConfig;
 use InterNACHI\Modular\Support\ModuleRegistry;
 use Symfony\Component\Console\Exception\InvalidOptionException;
@@ -14,6 +15,7 @@ trait Modularize
 		if ($name = $this->option('module')) {
 			$registry = $this->getLaravel()->make(ModuleRegistry::class);
 
+			$name = Str::kebab($name);
 			if ($module = $registry->module($name)) {
 				return $module;
 			}
