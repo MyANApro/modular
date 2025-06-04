@@ -124,6 +124,7 @@ class AutodiscoveryHelper
 			each: fn(string $filename) => require $filename
 		);
 	}
+
 	public function consoleRoutes(ApplicationBuilder $builder): void
 	{
 		$this->withCache(
