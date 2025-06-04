@@ -262,7 +262,7 @@ class MakeModule extends Command
 		return [
 			'composer.json' => $this->pathToStub('composer-stub-latest.json'),
 			'src/Providers/StubClassNamePrefixServiceProvider.php' => $this->pathToStub('ServiceProvider.php'),
-			'tests/Feature/Providers/StubClassNamePrefixExampleTest.php' => $this->pathToStub('ModuleExampleTest.php'),
+			'tests/Unit/StubClassNamePrefixExampleTest.php' => $this->pathToStub('ModuleExampleTest.php'),
 			'database/migrations/StubMigrationPrefix_set_up_StubModuleName_module.php' => $this->pathToStub('migration.php'),
 			'routes/web.php' => $this->pathToStub('web-routes.php'),
 			'routes/api.php' => $this->pathToStub('api-routes.php'),
