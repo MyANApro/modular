@@ -109,6 +109,10 @@ class ModularServiceProvider extends ServiceProvider
 		$this->publishes([
 			"{$this->base_dir}/config/app-modules.php" => $this->app->configPath('app-modules.php'),
 		], 'modular-config');
+
+		$this->publishes([
+			__DIR__.'/../../stubs' => $this->app->basePath('modular/stubs'),
+		], 'modular-stubs');
 	}
 
 	protected function bootPackageCommands(): void

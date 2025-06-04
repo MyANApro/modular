@@ -11,6 +11,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Configuration\ApplicationBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Translation\Translator;
@@ -38,6 +39,7 @@ class AutodiscoveryHelper
 		$helpers = [
 			$this->modules(...),
 			$this->routes(...),
+			$this->consoleRoutes(...),
 			$this->views(...),
 			$this->blade(...),
 			$this->translations(...),
@@ -120,6 +122,17 @@ class AutodiscoveryHelper
 				->values()
 				->map(fn(SplFileInfo $file) => $file->getRealPath()),
 			each: fn(string $filename) => require $filename
+		);
+	}
+	public function consoleRoutes(ApplicationBuilder $builder): void
+	{
+		$this->withCache(
+			key: 'console_files',
+			default: fn() => $this->finders
+				->consoleFileFinder()
+				->values()
+				->map(fn(SplFileInfo $file) => $file->getRealPath()),
+			each: fn(string $filename) => $builder->withCommands([$filename])
 		);
 	}
 

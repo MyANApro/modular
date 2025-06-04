@@ -66,6 +66,16 @@ class FinderFactory
 		return FinderCollection::forFiles()
 			->depth(0)
 			->name('*.php')
+			->except(['console.php'])
+			->sortByName()
+			->inOrEmpty($this->base_path.'/*/routes');
+	}
+
+	public function consoleFileFinder(): FinderCollection
+	{
+		return FinderCollection::forFiles()
+			->depth(0)
+			->name('console.php')
 			->sortByName()
 			->inOrEmpty($this->base_path.'/*/routes');
 	}

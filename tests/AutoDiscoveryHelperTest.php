@@ -140,8 +140,22 @@ class AutoDiscoveryHelperTest extends TestCase
 			$resolved[] = str_replace('\\', '/', $file->getPathname());
 		});
 
-		$this->assertContains($this->module1->path("routes/{$this->module1->name}-routes.php"), $resolved);
-		$this->assertContains($this->module2->path("routes/{$this->module2->name}-routes.php"), $resolved);
+		$this->assertContains($this->module1->path('routes/web.php'), $resolved);
+		$this->assertContains($this->module1->path('routes/api.php'), $resolved);
+		$this->assertContains($this->module2->path('routes/web.php'), $resolved);
+		$this->assertContains($this->module2->path('routes/api.php'), $resolved);
+	}
+
+	public function test_it_finds_console(): void
+	{
+		$resolved = [];
+
+		$this->helper->consoleFileFinder()->each(function(SplFileInfo $file) use (&$resolved) {
+			$resolved[] = str_replace('\\', '/', $file->getPathname());
+		});
+
+		$this->assertContains($this->module1->path('routes/console.php'), $resolved);
+		$this->assertContains($this->module2->path('routes/console.php'), $resolved);
 	}
 
 	public function test_it_finds_view_directories(): void
