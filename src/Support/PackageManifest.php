@@ -29,5 +29,9 @@ class PackageManifest extends \Illuminate\Foundation\PackageManifest
 		})->reject(function($configuration, $package) use ($ignore, $ignoreAll) {
 			return $ignoreAll || in_array($package, $ignore);
 		})->filter()->all());
+
+		// Force reload manifest
+		$this->manifest = null;
+		$this->getManifest();
 	}
 }
