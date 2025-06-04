@@ -85,6 +85,8 @@ class ModularServiceProvider extends ServiceProvider
 			$this->autodiscover()->commands($artisan);
 			$this->registerNamespacesInTinker();
 		});
+
+		$this->optimizes('modules:cache', 'modules:clear', 'modular');
 	}
 
 	public function boot(): void
