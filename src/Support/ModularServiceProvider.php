@@ -70,6 +70,12 @@ class ModularServiceProvider extends ServiceProvider
 			return new MigrateMakeCommand($app['migration.creator'], $app['composer']);
 		});
 
+		$this->app->singleton(\Illuminate\Foundation\PackageManifest::class, fn() => new PackageManifest(
+			new Filesystem(),
+			$this->app->basePath(),
+			$this->app->getCachedPackagesPath()
+		));
+
 		$this->registerEloquentFactories();
 
 		$this->app->resolving(Migrator::class, fn(Migrator $migrator) => $this->autodiscover()->migrations($migrator));
