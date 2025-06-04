@@ -117,7 +117,7 @@ class ModularServiceProvider extends ServiceProvider
 		], 'modular-config');
 
 		$this->publishes([
-			__DIR__.'/../../stubs' => $this->app->basePath('modular/stubs'),
+			__DIR__.'/../../stubs' => $this->app->basePath('stubs/modular'),
 		], 'modular-stubs');
 	}
 
