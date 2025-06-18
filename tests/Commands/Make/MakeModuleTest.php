@@ -52,14 +52,7 @@ class MakeModuleTest extends TestCase
 		$json_file = new JsonFile($this->app_composer_file);
 		$new_app_composer_content = $json_file->read();
 
-		$this->assertEquals('*', $new_app_composer_content['require']["modules/{$module_name}"]);
-
-		$repository = [
-			'type' => 'path',
-			'url' => 'app-modules/*',
-			'options' => ['symlink' => true],
-		];
-		$this->assertContains($repository, $new_app_composer_content['repositories']);
+		$this->assertContains('app-modules/*/composer.json', $new_app_composer_content['extra']['merge-plugin']['include']);
 	}
 
 	public function test_it_scaffolds_a_new_module_based_on_custom_config(): void

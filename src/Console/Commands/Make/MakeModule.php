@@ -6,7 +6,7 @@ use Composer\Factory;
 use Composer\Json\JsonFile;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use InterNACHI\Modular\Console\Commands\ModulesClear;
@@ -213,93 +213,31 @@ class MakeModule extends Command
 		$json_file = new JsonFile(Factory::getComposerFile());
 		$definition = $json_file->read();
 
-		if (! isset($definition['repositories'])) {
-			$definition['repositories'] = [];
+		if (! isset($definition['extra']['merge-plugin']['include'])) {
+			$definition['extra']['merge-plugin']['include'] = [];
 		}
 
-		if (! isset($definition['require'])) {
-			$definition['require'] = [];
-		}
+		$includePath = Str::of(Config::get('app-modules.modules_directory'))
+			->finish('/')->append('*/composer.json')->toString();
 
-		$module_config = [
-			'type' => 'path',
-			'url' => str_replace('\\', '/', config('app-modules.modules_directory', 'app-modules')).'/*',
-			'options' => [
-				'symlink' => true,
-			],
-		];
+		$merge_plugin_already_setup = collect($definition['extra']['merge-plugin']['include'])
+			->contains(fn($includes) => $includes === $includePath);
 
-		$has_changes = false;
-
-		$repository_already_exists = collect($definition['repositories'])
-			->contains(function($repository) use ($module_config) {
-				return $repository['url'] === $module_config['url'];
-			});
-
-		if (false === $repository_already_exists) {
-			$this->line(" - Adding path repository for <info>{$module_config['url']}</info>");
-			$has_changes = true;
-
-			if (Arr::isAssoc($definition['repositories'])) {
-				$definition['repositories'][$this->module_name] = $module_config;
-			} else {
-				$definition['repositories'][] = $module_config;
-			}
-		}
-
-		if (! isset($definition['require'][$this->composer_name])) {
-			$this->line(" - Adding require statement for <info>{$this->composer_name}:*</info>");
-			$has_changes = true;
-
-			$definition['require']["{$this->composer_namespace}/{$this->module_name}"] = '*';
-			$definition['require'] = $this->sortComposerPackages($definition['require']);
-		}
-
-		if ($has_changes) {
+		if ($merge_plugin_already_setup === false) {
+			$definition['extra']['merge-plugin']['include'][] = $includePath;
 			$json_file->write($definition);
 			$this->line(" - Wrote to <info>{$json_file->getPath()}</info>");
-
-			Process::path(base_path())
-				->command(['composer', 'update', $this->composer_name])
-				->run();
 		} else {
-			$this->line(' - Nothing to update (repository & require entry already exist)');
+			$this->line(' - Nothing to update (merge-plugin entry already exist)');
 		}
+
+		Process::path(base_path())
+			->command('composer dump-autoload')
+			->run();
 
 		chdir($original_working_dir);
 
 		$this->newLine();
-	}
-
-	protected function sortComposerPackages(array $packages): array
-	{
-		$prefix = function($requirement) {
-			return preg_replace(
-				[
-					'/^php$/',
-					'/^hhvm-/',
-					'/^ext-/',
-					'/^lib-/',
-					'/^\D/',
-					'/^(?!php$|hhvm-|ext-|lib-)/',
-				],
-				[
-					'0-$0',
-					'1-$0',
-					'2-$0',
-					'3-$0',
-					'4-$0',
-					'5-$0',
-				],
-				$requirement
-			);
-		};
-
-		uksort($packages, function($a, $b) use ($prefix) {
-			return strnatcmp($prefix($a), $prefix($b));
-		});
-
-		return $packages;
 	}
 
 	protected function setUpStyles(): void

@@ -1,62 +1,66 @@
 {
-	"name": "internachi/modular",
-	"description": "Modularize your Laravel apps",
-	"keywords": [
-		"laravel",
-		"modules",
-		"modular",
-		"module"
-	],
-	"authors": [
-		{
-			"name": "Chris Morrell",
-			"homepage": "http://www.cmorrell.com"
-		}
-	],
-	"type": "library",
-	"license": "MIT",
-	"require": {
-		"php": ">=8.3",
-		"ext-simplexml": "*",
-		"ext-dom": "*",
-		"composer/composer": "^2.1",
-		"illuminate/support": "^11|^12|13.x-dev|dev-master|dev-main"
-	},
-	"require-dev": {
-		"orchestra/testbench": "^9.11|^10.0|dev-master|dev-main",
-		"friendsofphp/php-cs-fixer": "^3.14",
-		"mockery/mockery": "^1.5",
-		"phpunit/phpunit": "^10.5|^11.5",
-		"ext-json": "*",
-		"livewire/livewire": "^2.5|^3.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"InterNACHI\\Modular\\": "src/"
-		}
-	},
-	"autoload-dev": {
-		"psr-4": {
-			"InterNACHI\\Modular\\Tests\\": "tests/"
-		}
-	},
-	"scripts": {
-		"fix-style": "vendor/bin/php-cs-fixer fix",
-		"check-style": "vendor/bin/php-cs-fixer fix --diff --dry-run"
-	},
-	"extra": {
-		"laravel": {
-			"providers": [
-				"InterNACHI\\Modular\\Support\\ModularServiceProvider",
-				"InterNACHI\\Modular\\Support\\ModularizedCommandsServiceProvider"
-			],
-			"aliases": {
-				"Modules": "InterNACHI\\Modular\\Support\\Facades\\Modules"
-			}
-		}
-	},
-	"minimum-stability": "dev",
-	"prefer-stable": true,
-	"config": {
-	}
+    "name": "internachi/modular",
+    "description": "Modularize your Laravel apps",
+    "keywords": [
+        "laravel",
+        "modules",
+        "modular",
+        "module"
+    ],
+    "authors": [
+        {
+            "name": "Chris Morrell",
+            "homepage": "http://www.cmorrell.com"
+        }
+    ],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.3",
+        "ext-simplexml": "*",
+        "ext-dom": "*",
+        "composer/composer": "^2.1",
+        "illuminate/support": "^11|^12|13.x-dev|dev-master|dev-main",
+        "wikimedia/composer-merge-plugin": "^2.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.11|^10.0|dev-master|dev-main",
+        "friendsofphp/php-cs-fixer": "^3.14",
+        "mockery/mockery": "^1.5",
+        "phpunit/phpunit": "^10.5|^11.5",
+        "ext-json": "*",
+        "livewire/livewire": "^2.5|^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "InterNACHI\\Modular\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "InterNACHI\\Modular\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "fix-style": "vendor/bin/php-cs-fixer fix",
+        "check-style": "vendor/bin/php-cs-fixer fix --diff --dry-run"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "InterNACHI\\Modular\\Support\\ModularServiceProvider",
+                "InterNACHI\\Modular\\Support\\ModularizedCommandsServiceProvider"
+            ],
+            "aliases": {
+                "Modules": "InterNACHI\\Modular\\Support\\Facades\\Modules"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true
+        }
+    }
 }
